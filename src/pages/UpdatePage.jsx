@@ -1,31 +1,52 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-export default function CreatePage() {
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+
+export default function UpdatePage() {
   const [caption, setCaption] = useState("");
   const [image, setImage] = useState("");
+  const params = useParams();
   const navigate = useNavigate();
+  const url = `https://react-user-crud-app-1cfaa-default-rtdb.europe-west1.firebasedatabase.app/posts/${params.id}.json`;
 
+  // Fetch the post data on component mount
+  useEffect(() => {
+    async function fetchPostData() {
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        if (data) {
+          setCaption(data.caption || "");
+          setImage(data.image || "");
+        }
+      } else {
+        console.error("Error fetching post data");
+      }
+    }
+    fetchPostData();
+  }, [url]);
+
+  // Handle form submission
   async function handleSubmit(event) {
     event.preventDefault();
 
-    const post = { caption, image, uid: "ZfPTVEMQKf9vhNiUh0bj" };
+    const postToUpdate = { caption, image };
 
-    const response = await fetch(
-      "https://react-user-crud-app-1cfaa-default-rtdb.europe-west1.firebasedatabase.app/posts.json",
-      {
-        method: "POST",
-        body: JSON.stringify(post),
-      }
-    );
+    const response = await fetch(url, {
+      method: "PATCH",
+      body: JSON.stringify(postToUpdate),
+    });
 
     if (response.ok) {
-      navigate("/");
+      navigate(`/posts/${params.id}`);
+    } else {
+      console.log("Error updating post data");
     }
   }
 
   return (
-    <section className="page">
+    <section className="page" id="update-page">
       <div className="container">
+        <h1>Update post</h1>
         <form className="form-grid" onSubmit={handleSubmit}>
           <label htmlFor="caption">Caption</label>
           <input
